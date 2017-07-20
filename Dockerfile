@@ -18,7 +18,7 @@ RUN chown -R emerald.emerald /home/emerald && chmod 770 -R /home/emerald
 USER emerald
 ADD emerald.conf /home/emerald/.emerald/emerald.conf
 WORKDIR /home/emerald
-RUN git clone https://github.com/Emerald-Crypto/emerald.git
+RUN git clone https://github.com/crypto-currency/Emerald.git
 WORKDIR /home/emerald/emerald/src
 RUN mkdir obj && make -f makefile.unix && mv emeraldd /home/emerald/
 WORKDIR /home/emerald
