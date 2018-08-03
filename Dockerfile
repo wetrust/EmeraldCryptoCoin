@@ -19,9 +19,10 @@ USER emerald
 ADD emerald.conf /home/emerald/.emerald/emerald.conf
 WORKDIR /home/emerald
 RUN git clone https://github.com/crypto-currency/Emerald.git
-WORKDIR /home/emerald/emerald/src
-RUN mkdir obj && make -f makefile.unix && mv emeraldd /home/emerald/
+WORKDIR /home/emerald/Emerald/src
+RUN test -e obj || mkdir obj 
+RUN make -f makefile.unix && mv emeraldd /home/emerald/
 WORKDIR /home/emerald
-RUN rm -rf emerald
+RUN rm -rf Emerald
 EXPOSE 12127
 CMD supervisord -c /etc/supervisor/conf.d/supervisord.conf
