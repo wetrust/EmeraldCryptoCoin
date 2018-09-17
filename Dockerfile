@@ -1,28 +1,39 @@
-# Contenedor para emerald Crypto coin
-# Pertenece al proyecto emdpay.cl
-# plataforma de pago para la moneda emd
-# Mantenido por WeTrust E.I.R.L 2017
+FROM phusion/baseimage:0.10.2
 
-FROM ubuntu:xenial
-USER root
-RUN apt-get update && apt-get install --no-install-recommends -y \
+
+RUN apt-get update -y && apt-get install --no-install-recommends -y \
     git build-essential libssl-dev libdb5.3-dev libdb5.3++-dev \
     libboost-all-dev libqrencode-dev libminiupnpc-dev miniupnpc \
-    supervisor ca-certificates \
+    ca-certificates \
     && apt-get autoremove -y && apt-get autoclean -y && apt-get clean \
     && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && rm -rf /var/tmp/*
-ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-RUN useradd emerald &&  mkdir /home/emerald && mkdir /home/emerald/.emerald
-RUN chown -R emerald.emerald /home/emerald && chmod 770 -R /home/emerald
+
+RUN useradd -r -m -d /opt/emerald emerald
+RUN mkdir /data && \
+    chown emerald:emerald /data && \
+    chmod 700 /data
+RUN mkdir /opt/emerald/.emerald && \
+    chown emerald:emerald /opt/emerald/.emerald && \
+    chmod 700 /opt/emerald/.emerald
+ADD emerald.conf /opt/emerald/.emerald/emerald.conf
+RUN chmod 700 /opt/emerald/ && chown emerald:emerald /opt/emerald/
+RUN chown 600 /opt/emerald/.emerald/emerald.conf && chown emerald:emerald /opt/emerald/.emerald/emerald.conf
 
 USER emerald
-ADD emerald.conf /home/emerald/.emerald/emerald.conf
-WORKDIR /home/emerald
+WORKDIR /opt/emerald
 RUN git clone https://github.com/crypto-currency/Emerald.git
-WORKDIR /home/emerald/Emerald/src
+WORKDIR /opt/emerald/Emerald/src
 RUN test -e obj || mkdir obj 
-RUN make -f makefile.unix && mv emeraldd /home/emerald/
-WORKDIR /home/emerald
+RUN make -f makefile.unix && mv emeraldd /opt/emerald/
+WORKDIR /opt/emerald
 RUN rm -rf Emerald
+USER root
+
+RUN mkdir /etc/service/emeraldd
+COPY emeraldd.sh /etc/service/emeraldd/run
+RUN chmod +x /etc/service/emeraldd/run
+
 EXPOSE 12127
-CMD supervisord -c /etc/supervisor/conf.d/supervisord.conf
+VOLUME /data
+
+CMD ["/sbin/my_init"]
